@@ -56,16 +56,16 @@
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" name="remember" class="custom-control-input" tabindex="3"
                                         id="remember-me">
-                                    <label class="custom-control-label" for="remember-me">Remember Me</label>
+                                    <label class="custom-control-label" for="remember-me">Ingatkan Saya</label>
                                 </div>
                             </div>
 
                             <div class="form-group text-right">
                                 <a href="auth-forgot-password.html" class="float-left mt-3">
-                                    Forgot Password?
+                                    Lupa Kata Sandi?
                                 </a>
                                 <button type="submit" class="btn btn-primary btn-lg btn-icon icon-right" tabindex="4">
-                                    Login
+                                    Masuk
                                 </button>
                             </div>
 
