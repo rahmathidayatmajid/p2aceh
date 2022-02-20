@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
     <title>Login &mdash; P2ACEH</title>
+    <meta name="description"
+        content="Bidang Penataan & Pemberdayaan Kanwil BPN Aceh. Temukan info terbaru seputar pertanahan di Aceh.">
+    <meta content="" name="keywords">
+
+    <!-- Favicons -->
+    <link href="<?=base_url()?>/template/admin/assets/img/favicon.png" rel="icon">
+    <link href="<?=base_url()?>/template/admin/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
     <!-- General CSS Files -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
@@ -31,11 +38,14 @@
                         <h4 class="text-dark font-weight-normal">Bidang P2<span class="font-weight-bold"> BPN
                                 ACEH</span>
                         </h4>
-                        <form method="POST" action="#" class="needs-validation" novalidate="">
+                        <?= view('Myth\Auth\Views\_message_block') ?>
+
+                        <form action="<?= route_to('login') ?>" method="post" class="needs-validation" novalidate="">
+                            <?= csrf_field() ?>
+
                             <div class="form-group">
-                                <label for="email">Email</label>
-                                <input id="email" type="email" class="form-control" name="email" tabindex="1" required
-                                    autofocus>
+                                <label for="email"><?=lang('Auth.email')?></label>
+                                <input id="" type="" class="form-control" name="email" tabindex="">
                                 <div class="invalid-feedback">
                                     Please fill in your email
                                 </div>
@@ -43,10 +53,9 @@
 
                             <div class="form-group">
                                 <div class="d-block">
-                                    <label for="password" class="control-label">Password</label>
+                                    <label for="password" class="control-label"><?=lang('Auth.password')?></label>
                                 </div>
-                                <input id="password" type="password" class="form-control" name="password" tabindex="2"
-                                    required>
+                                <input id="password" type="password" class="form-control" name="password" tabindex="2">
                                 <div class="invalid-feedback">
                                     please fill in your password
                                 </div>
@@ -64,8 +73,8 @@
                                 <a href="auth-forgot-password.html" class="float-left mt-3">
                                     Lupa Kata Sandi?
                                 </a>
-                                <button type="submit" class="btn btn-primary btn-lg btn-icon icon-right" tabindex="4">
-                                    Masuk
+                                <button type="submit" class="btn btn-primary btn-lg btn-icon icon-right"
+                                    tabindex="4"><?=lang('Auth.loginAction')?>
                                 </button>
                             </div>
 

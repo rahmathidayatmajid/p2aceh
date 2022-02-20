@@ -252,6 +252,8 @@
 
                     <div class="pagetitle">
                         <h3>Dashboard Capaian Kinerja Bidang P2 BPN Aceh 2022</h3>
+                        <iframe id="" src="<?=base_url()?>/dashboard/" allowFullScreen="false" style="width: 1400px;"
+                            frameborder="" scrolling="no"></iframe>
                     </div>
                 </main>
                 <!-- End #main -->

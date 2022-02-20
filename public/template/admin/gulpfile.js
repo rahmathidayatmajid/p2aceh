@@ -1,211 +1,145 @@
-/**
- * Imports
- */
-const {src, dest, watch, parallel} = require('gulp');
-const notify = require('gulp-notify');
-const browserSync = require('browser-sync').create();
-const sass = require('gulp-sass');
-const concat = require('gulp-concat');
-const plumber = require('gulp-plumber');
-const rename = require('gulp-rename');
-const postcss = require('gulp-postcss');
-const autoprefixer = require('autoprefixer');
-const cssnano = require('cssnano');
-const uglify = require('gulp-uglify-es').default;
-const imagemin = require('gulp-imagemin');
-const imageminMozjpeg = require('imagemin-mozjpeg');
-const nunjucks = require('gulp-nunjucks');
-const color = require('gulp-color');
-const nodePath = require('path');
+"use strict";
 
-/**
- * Configuration
- * @type {String}
- */
-var cssDir = 'assets/css',
-    jsDir = 'assets/js',
-    htmlDir = 'sources/pages',
-    sassDir = 'sources/scss',
-    imgDir = 'assets/img';
+// Load plugins
+const autoprefixer = require("gulp-autoprefixer");
+const browsersync = require("browser-sync").create();
+const cleanCSS = require("gulp-clean-css");
+const del = require("del");
+const gulp = require("gulp");
+const header = require("gulp-header");
+const merge = require("merge-stream");
+const plumber = require("gulp-plumber");
+const rename = require("gulp-rename");
+const sass = require("gulp-sass");
+const uglify = require("gulp-uglify");
 
-/**
- * Helpers
- */
+// Load package.json for banner
+const pkg = require('./package.json');
 
-function _compile_html(path, onEnd, log=true, ret=false) {
-  if(log)
-    _log('[HTML] Compiling: ' + path, 'GREEN');
+// Set the banner content
+const banner = ['/*!\n',
+  ' * Start Bootstrap - <%= pkg.title %> v<%= pkg.version %> (<%= pkg.homepage %>)\n',
+  ' * Copyright 2013-' + (new Date()).getFullYear(), ' <%= pkg.author %>\n',
+  ' * Licensed under <%= pkg.license %> (https://github.com/StartBootstrap/<%= pkg.name %>/blob/master/LICENSE)\n',
+  ' */\n',
+  '\n'
+].join('');
 
-  let compile_html = src(path, { base: htmlDir })
-  .pipe(plumber())
-  .pipe(nunjucks.compile({
-    version: '2.3.0',
-    site_name: 'Stisla'
-  },
-  /**
-   * Nunjucks options
-   */
-  {
-    trimBlocks: true,
-    lstripBlocks: true,
-    /**
-     * Nunjucks filters
-     * @type {Object}
-     */
-    filters: {
-      is_active: (str, reg, page) => {
-        reg = new RegExp(reg, 'gm');
-        reg = reg.exec(page);
-        if(reg != null) {
-          return str;
-        }
-      }
-    }
-  }))
-  .on('error', console.error.bind(console))
-  .on('end', () => {
-    if(onEnd)
-      onEnd.call(this);
-
-    if(log)
-      _log('[HTML] Finished', 'GREEN');
-  })
-  .pipe(dest('pages'))
-  .pipe(plumber.stop());
-
-  if(ret) return compile_html;
-}
-
-function _compile_scss(path, onEnd, log=true, ret=false) {
-  if(log)
-    _log('[SCSS] Compiling:' + path, 'GREEN');
-
-  let compile_scss = src(path)
-  .pipe(plumber())
-  .pipe(sass({
-    errorLogToConsole: true
-  }))
-  .on('error', console.error.bind(console))
-  .on('end', () => {
-    if(onEnd)
-      onEnd.call(this);
-
-    if(log)
-      _log('[SCSS] Finished', 'GREEN');
-  })
-  .pipe(rename({
-    dirname: '',
-    extname: '.css'
-  }))
-  .pipe(postcss([autoprefixer()]))
-  .pipe(dest(cssDir))
-  .pipe(plumber.stop());
-
-  if(ret) return compile_scss;
-}
-
-function _log(str, clr) {
-  if(!clr) clr = 'WHITE';
-  console.log(color(str, clr));
-}
-
-/**
- * End of helper
- */
-
-/**
- * Execution
- */
-
-function folder() {
-  return src('*.*', {read: false})
-  .pipe(dest('./assets'))
-  .pipe(dest('./assets/css'))
-  .pipe(dest('./assets/js'))
-  .pipe(dest('./assets/img'));
-}
-
-function image() {
-  return src(imgDir + '/**/*.*')
-  .pipe(plumber())
-  .pipe(imagemin([
-    imageminMozjpeg({quality: 80})
-  ]))
-  .pipe(dest(imgDir))
-  .pipe(plumber.stop());
-}
-
-function compile_scss() {
-  return _compile_scss(sassDir + '/**/*.scss', null, false, true);
-}
-
-function compile_html() {
-  return _compile_html(htmlDir + '/**/*.html', null, false, true);
-}
-
-function watching() {
-  compile_scss();
-  compile_html();
-
-  /**
-   * BrowserSync initialization
-   * @type {Object}
-   */
-  browserSync.init({
-    server:{
+// BrowserSync
+function browserSync(done) {
+  browsersync.init({
+    server: {
       baseDir: "./"
     },
-    startPath: 'pages/index.html',
-    port: 8080
+    port: 3000
   });
-
-  /**
-   * Watch ${htmlDir}
-   */
-  watch([
-    htmlDir + '/**/*.html',
-    sassDir + '/**/*.scss',
-    jsDir + '/**/*.js',
-    imgDir + '/**/*.*',
-  ]).on('change', (file) => {
-    file = file.replace(/\\/g, nodePath.sep);
-
-    if(file.indexOf('.scss') > -1) {
-      _compile_scss(sassDir + '/**/*.scss', () => {
-        return browserSync.reload();
-      });
-    }
-
-    if(file.indexOf('layouts') > -1 && file.indexOf('.html') > -1) {
-      _compile_html(htmlDir + '/*.html', () => {
-        return browserSync.reload();
-      });
-    }else if(file.indexOf('.html') > -1) {
-      _compile_html(file, () => {
-        return browserSync.reload();
-      });
-    }
-
-    if(file.indexOf(jsDir) > -1 || file.indexOf(imgDir) > -1) {
-      return browserSync.reload();
-    }
-  });
+  done();
 }
 
-// Create folder first
-exports.folder = folder;
+// BrowserSync reload
+function browserSyncReload(done) {
+  browsersync.reload();
+  done();
+}
 
-// Minify images
-exports.image = image;
+// Clean vendor
+function clean() {
+  return del(["./vendor/"]);
+}
 
-// Compile SCSS
-exports.scss = compile_scss;
+// Bring third party dependencies from node_modules into vendor directory
+function modules() {
+  // Bootstrap JS
+  var bootstrapJS = gulp.src('./node_modules/bootstrap/dist/js/*')
+    .pipe(gulp.dest('./vendor/bootstrap/js'));
+  // Bootstrap SCSS
+  var bootstrapSCSS = gulp.src('./node_modules/bootstrap/scss/**/*')
+    .pipe(gulp.dest('./vendor/bootstrap/scss'));
+  // ChartJS
+  var chartJS = gulp.src('./node_modules/chart.js/dist/*.js')
+    .pipe(gulp.dest('./vendor/chart.js'));
+  // dataTables
+  var dataTables = gulp.src([
+      './node_modules/datatables.net/js/*.js',
+      './node_modules/datatables.net-bs4/js/*.js',
+      './node_modules/datatables.net-bs4/css/*.css'
+    ])
+    .pipe(gulp.dest('./vendor/datatables'));
+  // Font Awesome
+  var fontAwesome = gulp.src('./node_modules/@fortawesome/**/*')
+    .pipe(gulp.dest('./vendor'));
+  // jQuery Easing
+  var jqueryEasing = gulp.src('./node_modules/jquery.easing/*.js')
+    .pipe(gulp.dest('./vendor/jquery-easing'));
+  // jQuery
+  var jquery = gulp.src([
+      './node_modules/jquery/dist/*',
+      '!./node_modules/jquery/dist/core.js'
+    ])
+    .pipe(gulp.dest('./vendor/jquery'));
+  return merge(bootstrapJS, bootstrapSCSS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing);
+}
 
-// Compile HTML
-exports.html = compile_html;
+// CSS task
+function css() {
+  return gulp
+    .src("./scss/**/*.scss")
+    .pipe(plumber())
+    .pipe(sass({
+      outputStyle: "expanded",
+      includePaths: "./node_modules",
+    }))
+    .on("error", sass.logError)
+    .pipe(autoprefixer({
+      cascade: false
+    }))
+    .pipe(header(banner, {
+      pkg: pkg
+    }))
+    .pipe(gulp.dest("./css"))
+    .pipe(rename({
+      suffix: ".min"
+    }))
+    .pipe(cleanCSS())
+    .pipe(gulp.dest("./css"))
+    .pipe(browsersync.stream());
+}
 
-// Dist
-exports.dist = parallel(folder, compile_scss, compile_html);
+// JS task
+function js() {
+  return gulp
+    .src([
+      './js/*.js',
+      '!./js/*.min.js',
+    ])
+    .pipe(uglify())
+    .pipe(header(banner, {
+      pkg: pkg
+    }))
+    .pipe(rename({
+      suffix: '.min'
+    }))
+    .pipe(gulp.dest('./js'))
+    .pipe(browsersync.stream());
+}
 
-// Run this command for dev.
-exports.default = watching;
+// Watch files
+function watchFiles() {
+  gulp.watch("./scss/**/*", css);
+  gulp.watch(["./js/**/*", "!./js/**/*.min.js"], js);
+  gulp.watch("./**/*.html", browserSyncReload);
+}
+
+// Define complex tasks
+const vendor = gulp.series(clean, modules);
+const build = gulp.series(vendor, gulp.parallel(css, js));
+const watch = gulp.series(build, gulp.parallel(watchFiles, browserSync));
+
+// Export tasks
+exports.css = css;
+exports.js = js;
+exports.clean = clean;
+exports.vendor = vendor;
+exports.build = build;
+exports.watch = watch;
+exports.default = build;
